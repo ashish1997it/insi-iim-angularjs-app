@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>SearchRecipes..</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <script src="public/js/angular.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+</head>
+<body>
+
+
+<div class="container-fluid" ng-app="formModule" ng-controller="formController">
+
+<h1>Search Recipes based on Ingredients tags</h1>
+<br><br>
+
+<div style="width:300px;"">
+<form name="searchTagsForm">
+	
+	<div class="form-group" >
+		<label for="">Enter tags:</label>
+		<textarea class="form-control" rows="3" name="search_tags" id="search_tags" ng-model="searchTagsModel" ng-minlength="4" ng-maxlength="32" placeholder="Enter tags.." required value="milk,milk"></textarea>
+
+		<span style = "color:red" ng-show = "searchTagsForm.$invalid">
+        	<span ng-show = "searchTagsForm.search_tags.$error.required">
+        	* Search tag is required.</span>
+        	<span ng-show = "searchTagsForm.search_tags.$error.minlength">
+        	Minimum 4 character required to search.</span>
+        	<span ng-show = "searchTagsForm.search_tags.$error.maxlength">
+        	More than 32 character are not to search.</span>
+        </span>
+	</div>
+	
+	<button class="btn btn-primary" ng-disabled="searchTagsForm.$invalid" ng-click="getRequest()">Search</button>
+	
+	<button class="btn btn-danger" ng-click="reset()">Reset</button>
+
+  <button class="btn btn-info" onclick="location.reload();">
+  <i class="fa fa-refresh" aria-hidden="true"></i>&nbsp Refresh</button>
+
+</form>
+</div>
+<br><br>
+
+
+<div class="hideByDefault animate-if" ng-show="showErrorMsg">
+	<ul ng-repeat="x in myData">
+		<li><span style="color: red;">{{ x.status }} : {{ x.msg }}</span></li>
+	</ul>
+</div>
+<hr>
+
+
+
+<div class="hideByDefault" ng-show="showSearchResult"> 
+<h2>Search Results..</h2>
+<br>
+
+<table class="table table-striped" border="1" style="width:800px;">
+<thead>
+	<tr>
+		<th>Sr.No.</th>
+		<th>Title</th>
+		<th>Images</th>
+		<th>Ingredients</th>
+		<th>Recipes</th>
+	</tr>
+</thead>
+<tbody>
+	<tr ng-repeat="x in myData">
+		<td>{{ current + $index + 1 }}</td>
+		<td>{{ x.title }}</td>
+		<td><img src="{{ x.thumbnail }}" alt="{{ x.title }}" width="120px" height="80px" title="{{ x.title }}"></td>
+		<td>{{ x.ingredients }}</td> 
+		<td><a href="{{ x.href }}" title="{{ x.href }}" target="_blank">Click to Explore Recipes..</a></td>
+	</tr>
+</tbody>
+</table>
+</div>
+
+
+</div>
+
+
+<script>
+var app = angular.module('formModule', []);
+
+app.controller("formController", function($scope, $http) {
+  $scope.searchTagsModel = "";
+
+  //using POST
+  $scope.getRequest = function() {
+  	var req = {
+     method: 'POST',
+     url: 'http://localhost/other/lara-api/insi-iim-laravel-api/laravel-api/public/fetch_feeds_from_domain',
+     headers: {
+       'Content-Type': 'application/json'
+     },
+     data: { "search_tags": $scope.searchTagsModel, "token": "insi001laraAPI" }
+    }
+    $http(req).then(
+      function successCallback(response) {
+        $scope.myData = response.data.results;
+        var jsonErrorData = angular.toJson(response.data.results, true);
+        var jsonErrorDataFlag = jsonErrorData.match(/error/gi);
+	        if (jsonErrorDataFlag) {
+			  	$scope.showErrorMsg = true;
+  			} else {
+  				$scope.showSearchResult = true;
+  			}
+      },
+      function errorCallback(response) {
+        alert("Invalid POST URL OR request parameter :(");
+      }
+    );
+  };
+
+
+    $scope.reset = function(){
+       $scope.searchTagsModel = null;
+    }
+
+});
+</script>
+
+</body>
+</html>
